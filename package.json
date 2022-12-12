@@ -4,6 +4,6 @@
     "morgan": "*",
     "mustache": "*",
     "mustache-express": "*",
-    "filesize": "*"
+    "python-struct": "*"
   }
 }
