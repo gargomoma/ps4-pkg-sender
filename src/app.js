@@ -68,13 +68,15 @@ app.get('/get', function (req, res) {
 	ps4_install_status(query_TaskId,res);
 });
 
-app.get('/files', function(req, res) {
+app.post('/files', function(req, res) {
 	res.setHeader("Content-Type", "text/html")
 	
 	const filepath = req.body.filepath;
 	pkg_wip_filename = filepath;
 	pkg_wip_meta = get_pkg_info(filepath,true);
-  
+	
+	res.write(`<h1>${filepath}</h1>`);
+	
 	var icon_stat = get_saved_icon(filepath);
 	if (icon_stat.status){
 		
@@ -192,7 +194,8 @@ function get_pkg_info(filename,getFiles){
 		fd = fs.openSync(filename, 'r')
 		for (let i = 0; i <= pkg_entry_count; i++) {
 			
-			let file_offset = pkg_table_offset + (i*files_buffer.length);	
+			let file_offset = pkg_table_offset + (i*files_buffer.length);
+			//console.log(`pkg_table_offset=${pkg_table_offset} i=${i}  offset=${file_offset}`);		
 			fs.readSync(fd, files_buffer, 0, files_buffer.length,file_offset);
 			var file_struct = struct.unpack(entry_format,files_buffer);
 			
@@ -244,9 +247,11 @@ function ps4_install_status(pkg_task_id,res) {
 		}
 		res.write(`stdout: ${stdout}<br>`);
 		console.log(`stdout: ${stdout}`);
+		//res.write(`stderr: ${stderr}`);
 		console.log(`stderr: ${stderr}`);
 		let task_progress_status = parse_response(stdout)
 		if(task_progress_status.status =="success"){
+			//res.write(`transferred: ${(task_progress_status.transferred/task_progress_status.length_total)*100}%`);
 			let transfered_perc = ((task_progress_status.transferred_total/task_progress_status.length_total)*100).toFixed(2);			
 			let str_transfered_ratio = `${getFileSize(task_progress_status.transferred_total)}/${getFileSize(task_progress_status.length_total)}`;			
 			res.write(`transferred: ${str_transfered_ratio} ${transfered_perc}% <br>`);
@@ -278,6 +283,8 @@ function ps4_install(filename, res) {
     }
     res.write(`stdout: ${stdout}`);
     console.log(`stdout: ${stdout}`);
+    //res.write(`stderr: ${stderr}`);
+    //console.log(`stderr: ${stderr}`);
 	let find_task_status = parse_response(stdout)
 	if(find_task_status.status =="success"){
 		res.write(`<br><br><a href="/get?taskId=${find_task_status.task_id}">Check task #${find_task_status.task_id}</a>`);
